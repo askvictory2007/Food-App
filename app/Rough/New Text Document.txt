@@ -1,0 +1,284 @@
+import React, {Component} from 'react';
+    import {View, Text, StyleSheet, ImageBackground, Image,Dimensions, TouchableOpacity} from 'react-native';
+    import { Actions } from 'react-native-router-flux'
+class About extends React.Component{
+    render(){
+        return(
+            <View style={styles.container}>
+            <View style={styles.backgroundContainer}>
+                <Image style={styles.bakcgroundImage} source={require('../assets/sample2.jpg')} /> 
+                </View>         
+                  <View style={styles.overlay}>
+                    <Text style = {[styles.textStyle, {paddingTop: 33}]} >My Account</Text>
+                    <Image source= {{uri:'https://us.123rf.com/450wm/amin268/amin2681711/amin268171100013/88929775-user-glyph-icon-web-and-mobile-admin-sign-vector-graphics-a-solid-pattern-on-a-white-background-eps-.jpg?ver=6'}}
+                        style={styles.avatarStyle}/>
+                    <Text style = {styles.textStyle} > Ashok Kumar.R</Text>
+                    <Text style = {styles.textStyle} > +9198435637652</Text>
+                    <Text style = {styles.textStyle} > </Text>
+                    </View>
+                   
+                <View style={styles.container}>
+                    <TouchableOpacity style={styles.button} onPress= {() => {Actions.authentication(); }}> 
+                    <Text style={styles.buttonText}>Fingerprint</Text>
+                </TouchableOpacity>
+                
+                </View>
+                </View>
+        );
+    }
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+}, 
+backgroundContainer: {
+    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+}, 
+bakcgroundImage: {
+    flex: 1, 
+    width: '100%', 
+    height: '100%',
+},           
+
+    avatarStyle: {
+        width:100, 
+        height: 100,
+        marginTop: 10,
+        borderRadius: 50,
+        alignSelf: 'center',
+    },
+    textStyle: {
+        marginTop: 10,
+        fontSize: 18,
+        color: "#FFFFFF",
+        fontWeight: 'bold',
+        alignSelf: 'center',
+    },
+    balanceContainer:{
+        padding:10,
+    },
+    button: {
+        width: 440,
+        backgroundColor: '#4f83cc',
+        borderRadius: 25,
+        marginVertical: 10,
+        paddingVertical: 17
+    },
+    buttonText: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: '#ffffff',
+        textAlign: 'center'
+    }
+     
+  });
+
+export default About;
+
+
+
+
+
+
+import React, { Component } from 'react'
+import {
+  StyleSheet,
+  SafeAreaView,
+  TouchableOpacity,
+  View,
+  Text,
+  TextInput
+} from 'react-native'
+//import firebase from 'react-native-firebase'
+import * as firebase from 'firebase';
+import { Actions } from 'react-native-router-flux'
+const firebaseConfig = {
+    apiKey: "AIzaSyDzl16rkyyaYiBeNWEuJbQU2b_BjaHLcq0",
+    authDomain: "applicationak-d4be9.firebaseapp.com",
+    databaseURL: "https://applicationak-d4be9.firebaseio.com",
+    projectId: "applicationak-d4be9",
+    storageBucket: "applicationak-d4be9.appspot.com",
+    messagingSenderId: "553164415296",
+    appId: "1:553164415296:web:70e93c39bdae28e2e09aa5",
+    measurementId: "G-12SH7XQFFX"
+  };
+
+  
+  firebase.initializeApp(firebaseConfig);
+  
+
+class PhoneAuthScreen extends Component {
+  state = {
+    phone: '',
+    confirmResult: null,
+    verificationCode: '',
+    userId: ''
+  }
+  validatePhoneNumber = () => {
+    var regexp = /^\+[0-9]?()[0-9](\s|\S)(\d[0-9]{8,16})$/
+    return regexp.test(this.state.phone)
+  }
+
+  handleSendCode = () => {
+    // Request to send OTP
+    if (this.validatePhoneNumber()) {
+      firebase
+        .auth()
+        .signInWithPhoneNumber(this.state.phone)
+        .then(confirmResult => {
+          this.setState({ confirmResult })
+        })
+        .catch(error => {
+          alert(error.message)
+
+          console.log(error)
+        })
+    } else {
+      alert('Invalid Phone Number')
+    }
+  }
+
+  changePhoneNumber = () => {
+    this.setState({ confirmResult: null, verificationCode: '' })
+  }
+
+  handleVerifyCode = () => {
+    // Request for OTP verification
+    const { confirmResult, verificationCode } = this.state
+    if (verificationCode.length == 6) {
+      confirmResult
+        .confirm(verificationCode)
+        .then(user => {
+          this.setState({ userId: user.uid })
+          alert(`Verified! ${user.uid}`)
+        })
+        .catch(error => {
+          alert(error.message)
+          console.log(error)
+        })
+    } else {
+      alert('Please enter a 6 digit OTP code.')
+    }
+  }
+
+  renderConfirmationCodeView = () => {
+    return (
+      <View style={styles.verificationView}>
+        <TextInput
+          style={styles.textInput}
+          placeholder='Verification code'
+          placeholderTextColor='#eee'
+          value={this.state.verificationCode}
+          keyboardType='numeric'
+          onChangeText={verificationCode => {
+            this.setState({ verificationCode })
+          }}
+          maxLength={6}
+        />
+        <TouchableOpacity
+          style={[styles.themeButton, { marginTop: 20 }]}
+          onPress={this.handleVerifyCode}>
+          <Text style={styles.themeButtonTitle}>Verify Code</Text>
+        </TouchableOpacity>
+      </View>
+    )
+  }
+
+  render() {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: '#333' }]}>
+        <View style={styles.page}>
+          <TextInput
+            style={styles.textInput}
+            placeholder='Phone Number with country code'
+            placeholderTextColor='#eee'
+            keyboardType='phone-pad'
+            value={this.state.phone}
+            onChangeText={phone => {
+              this.setState({ phone })
+            }}
+            maxLength={15}
+            editable={this.state.confirmResult ? false : true}
+          />
+
+          <TouchableOpacity
+            style={[styles.themeButton, { marginTop: 20 }]}
+            onPress={
+              this.state.confirmResult
+                ? this.changePhoneNumber
+                : this.handleSendCode
+            }>
+            <Text style={styles.themeButtonTitle}>
+              {this.state.confirmResult ? 'Change Phone Number' : 'Send Code'}
+            </Text>
+          </TouchableOpacity>
+
+          {this.state.confirmResult ? this.renderConfirmationCodeView() : null}
+        </View>
+      </SafeAreaView>
+    )
+  }
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#aaa'
+  },
+  page: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  textInput: {
+    marginTop: 20,
+    width: '90%',
+    height: 40,
+    borderColor: '#555',
+    borderWidth: 2,
+    borderRadius: 5,
+    paddingLeft: 10,
+    color: '#fff',
+    fontSize: 16
+  },
+  themeButton: {
+    width: '90%',
+    height: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#888',
+    borderColor: '#555',
+    borderWidth: 2,
+    borderRadius: 5
+  },
+  themeButtonTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff'
+  },
+  verificationView: {
+    width: '100%',
+    alignItems: 'center',
+    marginTop: 50
+  }
+})
+
+export default PhoneAuthScreen
+
+
+
+
+
+ {(this.state.longitude && this.state.longitude)?
+                <Text>My Location is :{this.state.latitude},{this.state.longitude}</Text>
+        :
+        <Text>Tracking Your Location.Please Wait........</Text>
+          }
